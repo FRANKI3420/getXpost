@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X (Twitter) Timeline Viewer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f7f9fa;
+      color: #0f1419;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-align: center;
+      color: #1d9bf0;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      flex: 1;
+    }
+
+    .input-wrapper span {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #536471;
+      font-weight: bold;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px 10px 28px;
+      border: 1px solid #cfd9de;
+      border-radius: 20px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #1d9bf0;
+    }
+
+    button {
+      background-color: #0f1419;
+      color: #ffffff;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: #272c30;
+    }
+
+    #timelineContainer {
+      min-height: 400px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h1>X タイムラインビューアー</h1>
+    <div class="search-box">
+      <div class="input-wrapper">
+        <span>@</span>
+        <input type="text" id="usernameInput" placeholder="public_cardigan" value="public_cardigan">
+      </div>
+      <button onclick="loadTimeline()">表示</button>
+    </div>
+
+    <div id="timelineContainer"></div>
+  </div>
+
+  <!-- X公式埋め込みウィジェット用スクリプト -->
+  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+  <script>
+    function loadTimeline() {
+      const usernameInput = document.getElementById('usernameInput').value.trim();
+      const username = usernameInput.replace(/^@/, '');
+      const container = document.getElementById('timelineContainer');
+
+      if (!username) {
+        alert('ユーザー名を入力してください');
+        return;
+      }
+
+      // コンテナ内を一度空にする
+      container.innerHTML = '';
+
+      // X公式のタイムライン用アンカータグを動的に生成
+      const anchor = document.createElement('a');
+      anchor.className = 'twitter-timeline';
+      anchor.setAttribute('data-height', '600');
+      anchor.setAttribute('data-theme', 'light');
+      anchor.setAttribute('href', `https://twitter.com/${username}`);
+      anchor.textContent = `@${username} さんのポスト`;
+
+      container.appendChild(anchor);
+
+      // X公式ウィジェットのスクリプトに新しく追加された要素を再スキャン・描画させる
+      if (window.twttr && window.twttr.widgets) {
+        window.twttr.widgets.load(container);
+      }
+    }
+
+    // ページ読み込み時に初期値（public_cardigan）で実行
+    window.onload = function () {
+      // スクリプトの読み込みを少し待ってから初回ロード
+      setTimeout(loadTimeline, 500);
+    };
+  </script>
+
+</body>
+
+</html>
