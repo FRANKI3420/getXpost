@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>X (Twitter) Timeline Viewer</title>
+  <title>X Post Viewer</title>
   <style>
     * {
       box-sizing: border-box;
@@ -87,8 +87,37 @@
       background-color: #272c30;
     }
 
-    #timelineContainer {
-      min-height: 400px;
+    .tweets-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 200px;
+    }
+
+    .tweet-card {
+      border: 1px solid #eff3f4;
+      border-radius: 12px;
+      padding: 16px;
+      background-color: #ffffff;
+    }
+
+    .tweet-date {
+      color: #536471;
+      font-size: 0.85rem;
+      margin-bottom: 6px;
+    }
+
+    .tweet-text {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .error-msg {
+      text-align: center;
+      color: #f4212e;
+      padding: 20px;
     }
   </style>
 </head>
@@ -96,56 +125,61 @@
 <body>
 
   <div class="container">
-    <h1>X タイムラインビューアー</h1>
+    <h1>X ポストビューアー</h1>
     <div class="search-box">
       <div class="input-wrapper">
         <span>@</span>
         <input type="text" id="usernameInput" placeholder="public_cardigan" value="public_cardigan">
       </div>
-      <button onclick="loadTimeline()">表示</button>
+      <button onclick="loadTweets()">表示</button>
     </div>
 
-    <div id="timelineContainer"></div>
+    <!-- idをtweetsContainerに変更 -->
+    <div id="tweetsContainer" class="tweets-list"></div>
   </div>
 
-  <!-- X公式埋め込みウィジェット用スクリプト -->
-  <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-
   <script>
-    function loadTimeline() {
-      const usernameInput = document.getElementById('usernameInput').value.trim();
-      const username = usernameInput.replace(/^@/, '');
-      const container = document.getElementById('timelineContainer');
+    async function loadTweets() {
+      const container = document.getElementById('tweetsContainer');
 
-      if (!username) {
-        alert('ユーザー名を入力してください');
-        return;
-      }
+      try {
+        // 同一リポジトリ内の tweets.json を取得
+        const response = await fetch('./tweets.json');
 
-      // コンテナ内を一度空にする
-      container.innerHTML = '';
+        if (!response.ok) {
+          throw new Error('JSON file not found');
+        }
 
-      // X公式のタイムライン用アンカータグを動的に生成
-      const anchor = document.createElement('a');
-      anchor.className = 'twitter-timeline';
-      anchor.setAttribute('data-height', '600');
-      anchor.setAttribute('data-theme', 'light');
-      anchor.setAttribute('href', `https://twitter.com/${username}`);
-      anchor.textContent = `@${username} さんのポスト`;
+        const tweets = await response.json();
 
-      container.appendChild(anchor);
+        container.innerHTML = '';
 
-      // X公式ウィジェットのスクリプトに新しく追加された要素を再スキャン・描画させる
-      if (window.twttr && window.twttr.widgets) {
-        window.twttr.widgets.load(container);
+        tweets.forEach(tweet => {
+          const card = document.createElement('div');
+          card.className = 'tweet-card';
+          card.innerHTML = `
+            <div class="tweet-date">${escapeHtml(tweet.date)}</div>
+            <div class="tweet-text">${escapeHtml(tweet.text)}</div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (error) {
+        console.error(error);
+        container.innerHTML = '<div class="error-msg">tweets.json の読み込みに失敗しました</div>';
       }
     }
 
-    // ページ読み込み時に初期値（public_cardigan）で実行
-    window.onload = function () {
-      // スクリプトの読み込みを少し待ってから初回ロード
-      setTimeout(loadTimeline, 500);
-    };
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    window.onload = loadTweets;
   </script>
 
 </body>
